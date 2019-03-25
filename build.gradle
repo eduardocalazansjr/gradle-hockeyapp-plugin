@@ -1,0 +1,107 @@
+buildscript {
+    repositories {
+        mavenCentral()
+        jcenter()
+    }
+    dependencies {
+        classpath 'com.github.townsfolk:gradle-release:1.2'
+        classpath 'com.github.ben-manes:gradle-versions-plugin:0.20.0'
+    }
+}
+
+apply plugin: 'groovy'
+apply plugin: 'idea'
+apply plugin: 'maven'
+apply plugin: 'release'
+apply plugin: 'codenarc'
+apply plugin: 'com.github.ben-manes.versions'
+
+sourceCompatibility = '1.8'
+targetCompatibility = '1.8'
+
+group = 'com.vlntdds.gradle'
+version = '3.8'
+
+ext.archivesBaseName = 'gradle-hockeyapp-plugin'
+ext.isSnapshot = version.endsWith("-SNAPSHOT")
+
+repositories {
+    mavenCentral()
+    google()
+}
+
+dependencies {
+    compile localGroovy()
+    compile gradleApi()
+    compile 'commons-io:commons-io:2.4'
+    compile 'org.apache.httpcomponents:httpclient:4.5.6'
+    compile 'org.apache.httpcomponents:httpmime:4.5.6'
+    compile 'de.felixschulze.teamcity:teamcity-status-message-helper:1.2'
+    compile ('com.android.tools.build:gradle:3.1.2') {
+        force = true
+    }
+
+    testCompile 'junit:junit:4.12'
+}
+
+test {
+    testLogging {
+        showStandardStreams = true
+        events "passed", "skipped", "failed", "standardOut", "standardError"
+    }
+}
+
+codenarcMain {
+    exclude "scr/test/**"
+}
+
+task sourceJar(type: Jar) {
+    description = 'An archive of the source code for Maven Central'
+    classifier = 'sources'
+    from sourceSets.main.groovy
+}
+
+task groovydocJar(type: Jar) {
+    description = 'An archive of the GroovyDocs for Maven Central'
+    classifier = 'javadoc'
+    from groovydoc
+}
+
+artifacts {
+    archives groovydocJar, sourceJar
+}
+
+codenarc {
+    ignoreFailures = true
+}
+
+/**v
+ * Create POM config and return for use by other tasks.
+ */
+def getPomConfiguration() {
+    return {
+        name 'Gradle HockeyApp Plugin'
+        packaging 'jar'
+        description 'A Gradle plugin for uploading iOS and Android Apps to HockeyApp.'
+        url 'https://github.com/vlntdds/gradle-hockeyapp-plugin'
+        licenses {
+            license {
+                name 'The MIT License'
+                url 'http://www.opensource.org/licenses/mit-license.php'
+                distribution 'repo'
+            }
+        }
+        developers {
+            developer {
+                id 'vlntdds'
+                name 'Eduardo Calazans Júnior'
+                email 'eduardoc_jr@me.com'
+            }
+        }
+        scm {
+            connection 'scm:https://vlntdds@github.com/vlntdds/gradle-hockeyapp-plugin'
+            developerConnection 'scm:git@github.com:vlntdds/gradle-hockeyapp-plugin.git'
+            url 'https://github.com/vlntdds/gradle-hockeyapp-plugin'
+        }
+    }
+}
